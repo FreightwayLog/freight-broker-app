@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import {
+  getAllLoads as getFirebaseLoads,
+  saveLoad as saveFirebaseLoad,
+  deleteLoad as deleteFirebaseLoad,
+} from "../firestore";
 
 // Icon Components - Fixed
 const Plus = ({ className }) => (
@@ -1012,21 +1017,30 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
 
   // Business metrics calculation
   const businessMetrics = (() => {
-    const loadsWithRates = loads.filter(l => l.carrierCost && l.clientQuote);
+    const loadsWithRates = loads.filter((l) => l.carrierCost && l.clientQuote);
     if (loadsWithRates.length === 0) return null;
 
-    const totalRevenue = loadsWithRates.reduce((sum, l) => sum + parseFloat(l.clientQuote), 0);
-    const totalCost = loadsWithRates.reduce((sum, l) => sum + parseFloat(l.carrierCost), 0);
+    const totalRevenue = loadsWithRates.reduce(
+      (sum, l) => sum + parseFloat(l.clientQuote),
+      0
+    );
+    const totalCost = loadsWithRates.reduce(
+      (sum, l) => sum + parseFloat(l.carrierCost),
+      0
+    );
     const totalProfit = totalRevenue - totalCost;
-    const avgMarkup = ((totalProfit / totalCost) * 100);
+    const avgMarkup = (totalProfit / totalCost) * 100;
 
     // Group by equipment type
     const equipmentMarkups = {};
-    loadsWithRates.forEach(load => {
+    loadsWithRates.forEach((load) => {
       if (!equipmentMarkups[load.equipmentType]) {
         equipmentMarkups[load.equipmentType] = { count: 0, totalMarkup: 0 };
       }
-      const markup = ((parseFloat(load.clientQuote) - parseFloat(load.carrierCost)) / parseFloat(load.carrierCost)) * 100;
+      const markup =
+        ((parseFloat(load.clientQuote) - parseFloat(load.carrierCost)) /
+          parseFloat(load.carrierCost)) *
+        100;
       equipmentMarkups[load.equipmentType].count++;
       equipmentMarkups[load.equipmentType].totalMarkup += markup;
     });
@@ -1035,38 +1049,49 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
       totalLoads: loadsWithRates.length,
       avgMarkup: avgMarkup.toFixed(1),
       totalProfit: totalProfit.toFixed(0),
-      equipmentMarkups: Object.entries(equipmentMarkups).map(([type, data]) => ({
-        type,
-        avgMarkup: (data.totalMarkup / data.count).toFixed(1),
-        count: data.count
-      })).sort((a, b) => b.count - a.count).slice(0, 5)
+      equipmentMarkups: Object.entries(equipmentMarkups)
+        .map(([type, data]) => ({
+          type,
+          avgMarkup: (data.totalMarkup / data.count).toFixed(1),
+          count: data.count,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5),
     };
   })();
 
   // Find similar loads when route/client changes
   useEffect(() => {
     if (rateData.originCity && rateData.destinationCity) {
-      const similar = loads.filter((load) => {
-        const originMatch =
-          (load.originCity === rateData.originCity ||
-            load.shipperCity === rateData.originCity) &&
-          (load.originState === rateData.originState ||
-            load.shipperState === rateData.originState);
-        
-        const destMatch =
-          (load.destinationCity === rateData.destinationCity ||
-            load.consigneeCity === rateData.destinationCity) &&
-          (load.destinationState === rateData.destinationState ||
-            load.consigneeState === rateData.destinationState);
-        
-        const hasRates = load.carrierCost && load.clientQuote;
-        
-        return (originMatch || destMatch) && hasRates;
-      }).slice(0, 5); // Show max 5 similar loads
-      
+      const similar = loads
+        .filter((load) => {
+          const originMatch =
+            (load.originCity === rateData.originCity ||
+              load.shipperCity === rateData.originCity) &&
+            (load.originState === rateData.originState ||
+              load.shipperState === rateData.originState);
+
+          const destMatch =
+            (load.destinationCity === rateData.destinationCity ||
+              load.consigneeCity === rateData.destinationCity) &&
+            (load.destinationState === rateData.destinationState ||
+              load.consigneeState === rateData.destinationState);
+
+          const hasRates = load.carrierCost && load.clientQuote;
+
+          return (originMatch || destMatch) && hasRates;
+        })
+        .slice(0, 5); // Show max 5 similar loads
+
       setSimilarLoads(similar);
     }
-  }, [rateData.originCity, rateData.originState, rateData.destinationCity, rateData.destinationState, loads]);
+  }, [
+    rateData.originCity,
+    rateData.originState,
+    rateData.destinationCity,
+    rateData.destinationState,
+    loads,
+  ]);
 
   // Auto-populate from stored quotes
   useEffect(() => {
@@ -1163,7 +1188,8 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
 
   const calculateQuickRate = async () => {
     // Calculate total cubic feet for LTL if applicable
-    const totalCubicFeet = rateData.loadType === "LTL" ? calculateTotalCubicFeet() : 0;
+    const totalCubicFeet =
+      rateData.loadType === "LTL" ? calculateTotalCubicFeet() : 0;
 
     // Historical rate analysis with multiple matching levels
     let matchingLoads = [];
@@ -1183,7 +1209,8 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
         (load.consigneeCity === rateData.destinationCity &&
           load.consigneeState === rateData.destinationState);
       const equipMatch = load.equipmentType === rateData.equipmentType;
-      const clientMatch = rateData.clientName && load.clientName === rateData.clientName;
+      const clientMatch =
+        rateData.clientName && load.clientName === rateData.clientName;
       const hasRates = load.carrierCost && load.clientQuote;
 
       return originMatch && destMatch && equipMatch && clientMatch && hasRates;
@@ -1252,65 +1279,81 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
     }
 
     // Calculate your average markup percentage from ALL historical data
-    const allLoadsWithRates = loads.filter(l => l.carrierCost && l.clientQuote);
+    const allLoadsWithRates = loads.filter(
+      (l) => l.carrierCost && l.clientQuote
+    );
     if (allLoadsWithRates.length > 0) {
       const totalMarkup = allLoadsWithRates.reduce((sum, load) => {
         const cost = parseFloat(load.carrierCost);
         const quote = parseFloat(load.clientQuote);
-        return sum + ((quote - cost) / cost * 100);
+        return sum + ((quote - cost) / cost) * 100;
       }, 0);
       avgMarkupPercentage = totalMarkup / allLoadsWithRates.length;
     }
 
-    let carrierCost, clientQuote, confidence, calculationMethod, historicalCount;
+    let carrierCost,
+      clientQuote,
+      confidence,
+      calculationMethod,
+      historicalCount;
     let priceRange = { min: 0, max: 0 };
 
     if (matchingLoads.length > 0) {
       // Calculate statistics from historical matches
-      const costs = matchingLoads.map(l => parseFloat(l.carrierCost));
-      const quotes = matchingLoads.map(l => parseFloat(l.clientQuote));
-      
+      const costs = matchingLoads.map((l) => parseFloat(l.carrierCost));
+      const quotes = matchingLoads.map((l) => parseFloat(l.clientQuote));
+
       // Calculate averages
       const avgCarrierCost = costs.reduce((a, b) => a + b, 0) / costs.length;
       const avgClientQuote = quotes.reduce((a, b) => a + b, 0) / quotes.length;
-      
+
       // Calculate min/max for ranges
       const minCost = Math.min(...costs);
       const maxCost = Math.max(...costs);
       const minQuote = Math.min(...quotes);
       const maxQuote = Math.max(...quotes);
-      
+
       // Calculate actual markup from this specific data set
-      const actualMarkup = ((avgClientQuote - avgCarrierCost) / avgCarrierCost) * 100;
+      const actualMarkup =
+        ((avgClientQuote - avgCarrierCost) / avgCarrierCost) * 100;
 
       carrierCost = Math.round(avgCarrierCost);
       clientQuote = Math.round(avgClientQuote);
-      
+
       priceRange = {
         minCost,
         maxCost,
         minQuote,
         maxQuote,
-        avgMarkup: actualMarkup.toFixed(1)
+        avgMarkup: actualMarkup.toFixed(1),
       };
 
-      confidence = `${matchLevel} (${matchingLoads.length} load${matchingLoads.length > 1 ? 's' : ''})`;
+      confidence = `${matchLevel} (${matchingLoads.length} load${
+        matchingLoads.length > 1 ? "s" : ""
+      })`;
       calculationMethod = "Historical pricing analysis";
       historicalCount = matchingLoads.length;
 
       // If client-specific match, mention their typical markup
       if (rateData.clientName && matchLevel.includes(rateData.clientName)) {
-        const clientLoads = loads.filter(l => 
-          l.clientName === rateData.clientName && 
-          l.carrierCost && 
-          l.clientQuote
+        const clientLoads = loads.filter(
+          (l) =>
+            l.clientName === rateData.clientName &&
+            l.carrierCost &&
+            l.clientQuote
         );
         if (clientLoads.length > 0) {
-          const clientMarkups = clientLoads.map(l => 
-            ((parseFloat(l.clientQuote) - parseFloat(l.carrierCost)) / parseFloat(l.carrierCost)) * 100
+          const clientMarkups = clientLoads.map(
+            (l) =>
+              ((parseFloat(l.clientQuote) - parseFloat(l.carrierCost)) /
+                parseFloat(l.carrierCost)) *
+              100
           );
-          const avgClientMarkup = clientMarkups.reduce((a, b) => a + b, 0) / clientMarkups.length;
-          confidence += ` | ${rateData.clientName} avg markup: ${avgClientMarkup.toFixed(1)}%`;
+          const avgClientMarkup =
+            clientMarkups.reduce((a, b) => a + b, 0) / clientMarkups.length;
+          confidence += ` | ${
+            rateData.clientName
+          } avg markup: ${avgClientMarkup.toFixed(1)}%`;
         }
       }
     } else {
@@ -1350,7 +1393,9 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
       carrierCost = Math.round(estimatedMiles * perMile);
       clientQuote = Math.round(carrierCost * (1 + avgMarkupPercentage / 100));
 
-      confidence = `No historical data - using market rates with your ${avgMarkupPercentage.toFixed(1)}% average markup`;
+      confidence = `No historical data - using market rates with your ${avgMarkupPercentage.toFixed(
+        1
+      )}% average markup`;
       calculationMethod = "Market estimate";
       historicalCount = 0;
     }
@@ -1438,20 +1483,30 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
           {businessMetrics && (
             <div className="bg-gray-50 p-3 rounded-lg mb-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-700">Your Pricing Patterns</p>
-                <p className="text-xs text-gray-500">Based on {businessMetrics.totalLoads} loads</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Your Pricing Patterns
+                </p>
+                <p className="text-xs text-gray-500">
+                  Based on {businessMetrics.totalLoads} loads
+                </p>
               </div>
               <div className="grid grid-cols-4 gap-3 text-xs">
                 <div>
                   <p className="text-gray-600">Avg Markup</p>
-                  <p className="font-bold text-lg">{businessMetrics.avgMarkup}%</p>
+                  <p className="font-bold text-lg">
+                    {businessMetrics.avgMarkup}%
+                  </p>
                 </div>
                 <div className="col-span-3">
                   <p className="text-gray-600 mb-1">Markup by Equipment</p>
                   <div className="flex gap-2 flex-wrap">
-                    {businessMetrics.equipmentMarkups.map(eq => (
-                      <span key={eq.type} className="bg-white px-2 py-1 rounded border">
-                        {eq.type}: <span className="font-medium">{eq.avgMarkup}%</span>
+                    {businessMetrics.equipmentMarkups.map((eq) => (
+                      <span
+                        key={eq.type}
+                        className="bg-white px-2 py-1 rounded border"
+                      >
+                        {eq.type}:{" "}
+                        <span className="font-medium">{eq.avgMarkup}%</span>
                       </span>
                     ))}
                   </div>
@@ -1482,55 +1537,68 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
                 />
               </div>
 
-              {rateData.clientName && (() => {
-                const clientLoads = loads.filter(l => 
-                  l.clientName === rateData.clientName && 
-                  l.carrierCost && 
-                  l.clientQuote
-                );
-                
-                if (clientLoads.length > 0) {
-                  const avgMarkup = clientLoads.reduce((sum, load) => {
-                    const cost = parseFloat(load.carrierCost);
-                    const quote = parseFloat(load.clientQuote);
-                    return sum + ((quote - cost) / cost * 100);
-                  }, 0) / clientLoads.length;
-                  
-                  const avgCarrierCost = clientLoads.reduce((sum, load) => 
-                    sum + parseFloat(load.carrierCost), 0
-                  ) / clientLoads.length;
-                  
-                  const avgClientQuote = clientLoads.reduce((sum, load) => 
-                    sum + parseFloat(load.clientQuote), 0
-                  ) / clientLoads.length;
-                  
-                  return (
-                    <div className="col-span-2 bg-blue-50 p-3 rounded-lg text-sm">
-                      <p className="font-medium text-blue-800 mb-1">
-                        {rateData.clientName} Pricing History
-                      </p>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <span className="text-gray-600">Avg Cost:</span>
-                          <span className="font-medium ml-1">${avgCarrierCost.toFixed(0)}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Avg Quote:</span>
-                          <span className="font-medium ml-1">${avgClientQuote.toFixed(0)}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Avg Markup:</span>
-                          <span className="font-medium ml-1">{avgMarkup.toFixed(1)}%</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Based on {clientLoads.length} previous loads
-                      </p>
-                    </div>
+              {rateData.clientName &&
+                (() => {
+                  const clientLoads = loads.filter(
+                    (l) =>
+                      l.clientName === rateData.clientName &&
+                      l.carrierCost &&
+                      l.clientQuote
                   );
-                }
-                return null;
-              })()}
+
+                  if (clientLoads.length > 0) {
+                    const avgMarkup =
+                      clientLoads.reduce((sum, load) => {
+                        const cost = parseFloat(load.carrierCost);
+                        const quote = parseFloat(load.clientQuote);
+                        return sum + ((quote - cost) / cost) * 100;
+                      }, 0) / clientLoads.length;
+
+                    const avgCarrierCost =
+                      clientLoads.reduce(
+                        (sum, load) => sum + parseFloat(load.carrierCost),
+                        0
+                      ) / clientLoads.length;
+
+                    const avgClientQuote =
+                      clientLoads.reduce(
+                        (sum, load) => sum + parseFloat(load.clientQuote),
+                        0
+                      ) / clientLoads.length;
+
+                    return (
+                      <div className="col-span-2 bg-blue-50 p-3 rounded-lg text-sm">
+                        <p className="font-medium text-blue-800 mb-1">
+                          {rateData.clientName} Pricing History
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <span className="text-gray-600">Avg Cost:</span>
+                            <span className="font-medium ml-1">
+                              ${avgCarrierCost.toFixed(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Avg Quote:</span>
+                            <span className="font-medium ml-1">
+                              ${avgClientQuote.toFixed(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Avg Markup:</span>
+                            <span className="font-medium ml-1">
+                              {avgMarkup.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Based on {clientLoads.length} previous loads
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
               <div>
                 <label className="block text-sm font-medium mb-1">
@@ -1827,9 +1895,15 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
                         <div className="text-lg font-bold text-yellow-800">
-                          ${(rateEstimates.clientQuote.avg - rateEstimates.carrierCost.avg).toLocaleString()}
+                          $
+                          {(
+                            rateEstimates.clientQuote.avg -
+                            rateEstimates.carrierCost.avg
+                          ).toLocaleString()}
                         </div>
-                        <div className="text-xs text-yellow-600">Gross Profit</div>
+                        <div className="text-xs text-yellow-600">
+                          Gross Profit
+                        </div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-bold text-yellow-800">
@@ -1841,7 +1915,9 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
                   </div>
 
                   <div className="bg-gray-100 p-3 rounded">
-                    <p className="font-medium text-sm mb-1">{rateEstimates.confidence}</p>
+                    <p className="font-medium text-sm mb-1">
+                      {rateEstimates.confidence}
+                    </p>
                     <p className="text-gray-600 text-xs">
                       Calculation: {rateEstimates.calculationMethod}
                     </p>
@@ -1852,7 +1928,8 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
                     )}
                     {rateEstimates.totalCubicFeet && (
                       <p className="text-gray-600 text-xs">
-                        Total volume: {rateEstimates.totalCubicFeet.toFixed(2)} ft³
+                        Total volume: {rateEstimates.totalCubicFeet.toFixed(2)}{" "}
+                        ft³
                       </p>
                     )}
                     {rateEstimates.historicalCount > 0 && (
@@ -1869,33 +1946,57 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
                         className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
                         <History className="w-4 h-4" />
-                        {showSimilarLoads ? "Hide" : "Show"} recent similar loads ({similarLoads.length})
-                        <ChevronDown className={`w-4 h-4 transform ${showSimilarLoads ? "rotate-180" : ""}`} />
+                        {showSimilarLoads ? "Hide" : "Show"} recent similar
+                        loads ({similarLoads.length})
+                        <ChevronDown
+                          className={`w-4 h-4 transform ${
+                            showSimilarLoads ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
-                      
+
                       {showSimilarLoads && (
                         <div className="mt-2 space-y-2">
                           {similarLoads.map((load, index) => (
-                            <div key={index} className="text-xs bg-white border rounded p-2">
+                            <div
+                              key={index}
+                              className="text-xs bg-white border rounded p-2"
+                            >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <div className="font-medium">{load.clientName}</div>
+                                  <div className="font-medium">
+                                    {load.clientName}
+                                  </div>
                                   <div className="text-gray-600">
-                                    {load.shipperCity || load.originCity} → {load.consigneeCity || load.destinationCity}
+                                    {load.shipperCity || load.originCity} →{" "}
+                                    {load.consigneeCity || load.destinationCity}
                                   </div>
                                   <div className="text-gray-500">
-                                    {load.equipmentType} • {formatDateShort(load.pickupDate)}
+                                    {load.equipmentType} •{" "}
+                                    {formatDateShort(load.pickupDate)}
                                   </div>
                                 </div>
                                 <div className="text-right">
                                   <div className="font-medium text-green-600">
-                                    ${parseFloat(load.carrierCost).toLocaleString()}
+                                    $
+                                    {parseFloat(
+                                      load.carrierCost
+                                    ).toLocaleString()}
                                   </div>
                                   <div className="font-medium text-blue-600">
-                                    ${parseFloat(load.clientQuote).toLocaleString()}
+                                    $
+                                    {parseFloat(
+                                      load.clientQuote
+                                    ).toLocaleString()}
                                   </div>
                                   <div className="text-gray-500">
-                                    {(((parseFloat(load.clientQuote) - parseFloat(load.carrierCost)) / parseFloat(load.carrierCost)) * 100).toFixed(1)}%
+                                    {(
+                                      ((parseFloat(load.clientQuote) -
+                                        parseFloat(load.carrierCost)) /
+                                        parseFloat(load.carrierCost)) *
+                                      100
+                                    ).toFixed(1)}
+                                    %
                                   </div>
                                 </div>
                               </div>
@@ -1924,14 +2025,15 @@ const QuickRateCalculator = ({ onClose, onCreateLoad, loads = [] }) => {
 
 // Load Confirmation Modal
 const LoadConfirmation = ({ data, onClose, showToast }) => {
+  if (!data) return null;
+
   const [manualNotesShipment, setManualNotesShipment] = useState(
-    data?.manualNotes || ""
+    data.manualNotes || ""
   );
   const [manualNotesPickupDelivery, setManualNotesPickupDelivery] =
     useState("");
-  const confirmationRef = useRef(null);
 
-  if (!data) return null;
+  const confirmationRef = useRef(null);
 
   const generatePDF = async () => {
     const printWindow = window.open("", "_blank");
@@ -2215,7 +2317,8 @@ const LoadConfirmation = ({ data, onClose, showToast }) => {
                 </p>
                 {data.shipperPhone && (
                   <p className="text-base">
-                    <span className="font-semibold">Phone:</span> {data.shipperPhone}
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {data.shipperPhone}
                   </p>
                 )}
                 <p className="text-base mt-2">
@@ -2252,7 +2355,8 @@ const LoadConfirmation = ({ data, onClose, showToast }) => {
                 </p>
                 {data.consigneePhone && (
                   <p className="text-base">
-                    <span className="font-semibold">Phone:</span> {data.consigneePhone}
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {data.consigneePhone}
                   </p>
                 )}
                 <p className="text-base mt-2">
@@ -2363,9 +2467,9 @@ const LoadConfirmation = ({ data, onClose, showToast }) => {
 
 // Bill of Lading Modal
 const BillOfLading = ({ data, onClose, showToast }) => {
-  const bolRef = useRef(null);
-  
   if (!data) return null;
+
+  const bolRef = useRef(null);
 
   const generatePDF = async () => {
     const printWindow = window.open("", "_blank");
@@ -2519,18 +2623,22 @@ const BillOfLading = ({ data, onClose, showToast }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm">
-                    <span className="font-semibold">Carrier Name:</span> {data.carrierName || "TO BE DETERMINED"}
+                    <span className="font-semibold">Carrier Name:</span>{" "}
+                    {data.carrierName || "TO BE DETERMINED"}
                   </p>
                   <p className="text-sm">
-                    <span className="font-semibold">Contact:</span> {data.carrierContact || "TBD"}
+                    <span className="font-semibold">Contact:</span>{" "}
+                    {data.carrierContact || "TBD"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm">
-                    <span className="font-semibold">Phone:</span> {data.carrierPhone || "TBD"}
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {data.carrierPhone || "TBD"}
                   </p>
                   <p className="text-sm">
-                    <span className="font-semibold">Email:</span> {data.carrierEmail || "TBD"}
+                    <span className="font-semibold">Email:</span>{" "}
+                    {data.carrierEmail || "TBD"}
                   </p>
                 </div>
               </div>
@@ -2913,17 +3021,17 @@ const TruckingTMS = () => {
 
   // Data Safety Check on mount
   useEffect(() => {
-    console.log('🔍 TMS Starting - Checking for existing data...');
+    console.log("🔍 TMS Starting - Checking for existing data...");
     try {
-      const existingData = localStorage.getItem('tms_loads');
+      const existingData = localStorage.getItem("tms_loads");
       if (existingData) {
         const parsedData = JSON.parse(existingData);
         console.log(`✅ Found ${parsedData.length} existing loads`);
       } else {
-        console.log('📦 No existing data found - starting fresh');
+        console.log("📦 No existing data found - starting fresh");
       }
     } catch (error) {
-      console.error('Error checking data:', error);
+      console.error("Error checking data:", error);
     }
 
     // Hide safety indicator after 5 seconds
@@ -3157,22 +3265,26 @@ const TruckingTMS = () => {
 
       if (formData.loadType === "LTL" && parseInt(formData.pieces) > 0) {
         loadData.ltlPackages = ltlPackages.slice(0, parseInt(formData.pieces));
-        loadData.dimensionUnit = formData.dimensionUnit; // Ensure dimension unit is saved
+        loadData.dimensionUnit = formData.dimensionUnit;
       }
 
       if (editingLoad && editingLoad.id) {
+        // Update existing load
         await saveLoad({ ...loadData, id: editingLoad.id });
-        setLoads(
-          loads.map((load) =>
-            load.id === editingLoad.id
-              ? { ...loadData, id: editingLoad.id }
-              : load
-          )
-        );
+
+        // Reload all loads from Firebase to ensure sync
+        const updatedLoads = await getAllLoads();
+        setLoads(updatedLoads);
+
         toast.success("Load updated successfully!");
       } else {
+        // Create new load
         const id = await saveLoad(loadData);
-        setLoads([...loads, { ...loadData, id }]);
+
+        // Reload all loads from Firebase
+        const updatedLoads = await getAllLoads();
+        setLoads(updatedLoads);
+
         toast.success("Load created successfully!");
       }
 
@@ -3280,7 +3392,9 @@ const TruckingTMS = () => {
     setEditingLoad(null);
     setCurrentView("create");
 
-    toast.info("Load duplicated - please update dates, load number, and package dimensions");
+    toast.info(
+      "Load duplicated - please update dates, load number, and package dimensions"
+    );
   };
 
   const handleCreateFromCalculator = (loadData) => {
@@ -4459,9 +4573,7 @@ const TruckingTMS = () => {
     const deliveredCount = loads.filter(
       (l) => l.loadStatus === "Delivered"
     ).length;
-    const quotedCount = loads.filter(
-      (l) => l.loadStatus === "Quoted"
-    ).length;
+    const quotedCount = loads.filter((l) => l.loadStatus === "Quoted").length;
 
     return (
       <div className="min-h-screen bg-gray-50 p-3">
@@ -4475,7 +4587,9 @@ const TruckingTMS = () => {
                   <Truck className="w-6 h-6 text-blue-600" />
                   Freightway Logistics TMS
                 </h1>
-                <p className="text-gray-600 text-sm">Dashboard - Active Loads</p>
+                <p className="text-gray-600 text-sm">
+                  Dashboard - Active Loads
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -4635,7 +4749,9 @@ const TruckingTMS = () => {
                               {load.shipperCity || load.originCity || "TBD"}
                             </div>
                             <div className="text-gray-500">
-                              {load.consigneeCity || load.destinationCity || "TBD"}
+                              {load.consigneeCity ||
+                                load.destinationCity ||
+                                "TBD"}
                             </div>
                           </div>
                         </td>
