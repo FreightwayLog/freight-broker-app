@@ -2281,55 +2281,41 @@ const LoadConfirmation = ({ data, onClose, showToast }) => {
               <h4 className="font-bold text-sm mb-2 text-black">
                 TERMS AND CONDITIONS
               </h4>
-              <ol className="list-decimal list-inside space-y-1 text-gray-700">
-                <li>
-                  <strong>Carrier Agreement:</strong> Carrier agrees to
-                  transport the shipment described above for the rate specified
-                  and warrants that it has the necessary authority, licenses,
-                  and permits to perform the services.
-                </li>
-                <li>
-                  <strong>Insurance Requirements:</strong> Carrier shall
-                  maintain cargo insurance of at least $100,000 CAD, commercial
-                  general liability insurance of at least $2,000,000 CAD, and
-                  all statutorily required insurance including workers'
-                  compensation.
-                </li>
-                <li>
-                  <strong>Payment Terms:</strong> Net 30 days from receipt of
-                  original bill of lading and clear proof of delivery. Invoices
-                  must include carrier's GST/HST number where applicable.
-                </li>
-                <li>
-                  <strong>Liability:</strong> Carrier's liability for loss or
-                  damage shall be determined in accordance with the applicable
-                  bill of lading terms and conditions, subject to the
-                  limitations in the Highway Traffic Act (Ontario) and
-                  applicable federal regulations.
-                </li>
-                <li>
-                  <strong>Cross-Border Shipments:</strong> For shipments
-                  crossing the Canada-US border, carrier must be FAST approved
-                  and maintain valid PARS/PAPS. Carrier is responsible for all
-                  customs documentation accuracy.
-                </li>
-                <li>
-                  <strong>Indemnification:</strong> Carrier agrees to indemnify
-                  and hold harmless Freightway Logistics Inc. from any claims
-                  arising from carrier's performance of services.
-                </li>
-                <li>
-                  <strong>Governing Law:</strong> This agreement shall be
-                  governed by the laws of Ontario, Canada. Any disputes shall be
-                  resolved through binding arbitration in Toronto, Ontario.
-                </li>
-                <li>
-                  <strong>Confidentiality:</strong> Carrier agrees to maintain
-                  confidentiality of all customer information and rate
-                  agreements.
-                </li>
-              </ol>
-            </div>
+              <div className="space-y-2 text-gray-700">
+  <div className="text-center font-bold text-sm mb-2">
+    📄 Freightway Logistics Inc. – Load Confirmation Terms & Conditions
+  </div>
+  <div className="text-center text-xs mb-3">
+    <strong>Address:</strong> 32 Fallingbrook Crescent, Toronto, ON M1N 1A9 | 
+    <strong>Phone:</strong> 416-694-4447 | <strong>Email:</strong> ben@freightway.ca
+  </div>
+  <ol className="list-decimal list-inside space-y-2 text-xs">
+    <li>
+      <strong>Carrier Agreement:</strong> By accepting this load, Carrier confirms it holds all required operating authority, permits, and insurance to transport the freight legally and safely across all jurisdictions involved.
+    </li>
+    <li>
+      <strong>Insurance Requirements:</strong> Carrier must maintain active insurance policies with the following minimum coverages: Cargo Insurance: $1,000,000 CAD, Commercial General Liability: $2,000,000 CAD, Automobile Liability: $1,000,000 CAD, Workers' Compensation: As required by law. Proof of insurance must be supplied upon request. Loads may be canceled immediately if insurance is invalid or insufficient.
+    </li>
+    <li>
+      <strong>Liability Disclaimer:</strong> Freightway Logistics Inc. accepts zero liability—under any circumstances—for cargo loss, damage, delay, or any issues involving the freight. Carrier assumes full responsibility for the care, custody, condition, and timely delivery of the shipment. All claims, penalties, or liabilities—including those for delays, lost time, freight damage, or third-party consequences—are solely the Carrier's responsibility.
+    </li>
+    <li>
+      <strong>Payment Terms:</strong> Net 30 days from date of receipt of: (1) Valid invoice (include GST/HST number if applicable) (2) Clean and legible POD. All documents must be submitted to ben@freightway.ca. Incomplete or unreadable documentation will delay payment.
+    </li>
+    <li>
+      <strong>Indemnification:</strong> Carrier shall fully indemnify and hold harmless Freightway Logistics Inc., its officers, agents, and clients from all losses, claims, suits, fines, or expenses arising from Carrier's operations, negligence, subcontractors, or performance of service.
+    </li>
+    <li>
+      <strong>Cross-Border:</strong> Carrier must be FAST-approved and maintain valid PARS/PAPS credentials. Carrier is fully liable for all customs compliance, paperwork accuracy, border delays, and related penalties.
+    </li>
+    <li>
+      <strong>Confidentiality:</strong> Carrier must not disclose any rates, customer details, or shipment information. Breach will result in permanent removal from future business and possible legal action.
+    </li>
+    <li>
+      <strong>Governing Law:</strong> This agreement is governed by the laws of Ontario, Canada. All disputes will be resolved via binding arbitration in Toronto, ON.
+    </li>
+  </ol>
+</div>
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
@@ -2693,47 +2679,61 @@ const BillOfLading = ({ data, onClose, showToast }) => {
 
             {/* Legal Terms and Conditions */}
             <div className="mt-6 p-4 border border-gray-400 bg-gray-50">
-              <p className="text-xs font-bold mb-2">
-                THIS IS TO CERTIFY THAT THE ABOVE NAMED MATERIALS ARE PROPERLY
-                CLASSIFIED, DESCRIBED, PACKAGED, MARKED, AND LABELED AND ARE IN
-                PROPER CONDITION FOR TRANSPORTATION ACCORDING TO THE APPLICABLE
-                REGULATIONS OF THE DEPARTMENT OF TRANSPORTATION AND THE NATIONAL
-                MOTOR FREIGHT CLASSIFICATION AS SHOWN IN THE NMFC 100 SERIES.
-              </p>
-              <p className="text-xs mb-2">
-                SUBJECT TO SECTION 7 OF CONDITIONS OF APPLICABLE BILL OF LADING.
-                IF THIS SHIPMENT IS TO BE DELIVERED TO THE CONSIGNEE WITHOUT
-                RECOURSE ON THE CONSIGNOR, THE CONSIGNOR SHALL SIGN THE
-                FOLLOWING STATEMENT. THE CARRIER SHALL NOT MAKE DELIVERY OF THE
-                SHIPMENT WITHOUT PAYMENT FREIGHT AND ALL OTHER LAWFUL CHARGES.
-              </p>
+  <p className="text-xs font-bold mb-3 text-center">
+    ✅ Complete BOL Terms with Declared Value Section
+  </p>
+  
+  <div className="mb-3 p-2 bg-white border border-gray-300">
+    <p className="text-xs font-bold">Declared Value (CAD): ___________________</p>
+    <p className="text-xs italic">*If left blank, liability is limited to $4.41 CAD/kg (~$2.00/lb) under Ontario statute.*</p>
+  </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <p className="text-xs font-bold mb-1">HAZARDOUS MATERIALS</p>
-                  <p className="text-xs">
-                    EMERGENCY CONTACT NO.: _______________________
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold mb-1">DECLARED VALUATION</p>
-                  <p className="text-xs">
-                    MAXIMUM LIABILITY OF $2.00 PER POUND ($4.41 PER KG) UNLESS
-                    DECLARED VALUATION
-                  </p>
-                </div>
-              </div>
+  <div className="space-y-2 text-xs">
+    <div>
+      <p className="font-bold">1. Liability & Custody</p>
+      <p>Carrier assumes full and unconditional responsibility for the cargo from pickup through delivery—including loss, damage, delay, theft, contamination, misrouting, or shortage. Freightway Logistics Inc. accepts no liability, acting strictly as a freight broker.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">2. No Double Brokering / Subcontracting</p>
+      <p>Carrier shall not re-broker, subcontract, or reassign this load without written approval. Unauthorized loading results in non-payment and full liability.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">3. Seal & Cargo Integrity</p>
+      <p>Carrier is responsible for verifying and maintaining seal integrity and load security. Broken, missing, or tampered seals constitute grounds for full cargo claim liability.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">4. POD & Documentation Compliance</p>
+      <p>Carrier must submit a clean, signed POD and invoice to ben@freightway.ca within 24 hours of delivery. Payment is Net 30 days from receipt of complete documentation. Carrier is responsible for any delays or deductions arising from incomplete paperwork.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">5. Indemnification</p>
+      <p>Carrier shall indemnify, defend, and hold harmless Freightway Logistics Inc., its officers, agents, and clients from all claims, liabilities, damages, losses, or costs arising from Carrier's operations, omissions, or use of subcontractors.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">6. Jurisdiction & Dispute Resolution</p>
+      <p>This BOL is governed by Ontario law. All disputes shall be resolved by binding arbitration in Toronto, Ontario. Carrier waives right to litigate in other jurisdictions.</p>
+    </div>
+    
+    <div>
+      <p className="font-bold">7. Non‑Circumvention</p>
+      <p>Carrier agrees not to solicit or accept cargo from any shipper or consignee introduced by Freightway Logistics Inc., directly or indirectly, for 12 months following delivery. Breach results in legal action and injunctive relief.</p>
+    </div>
+  </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="border-t border-gray-600 pt-2">
-                  <p className="text-xs">SHIPPER SIGNATURE</p>
-                </div>
-                <div className="border-t border-gray-600 pt-2">
-                  <p className="text-xs">CARRIER SIGNATURE / PER</p>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div className="grid grid-cols-2 gap-4 mt-4">
+    <div className="border-t border-gray-600 pt-2">
+      <p className="text-xs">SHIPPER SIGNATURE</p>
+    </div>
+    <div className="border-t border-gray-600 pt-2">
+      <p className="text-xs">CARRIER SIGNATURE / PER</p>
+    </div>
+  </div>
+</div>
 
           <div className="flex justify-end gap-3 mt-6">
             <button
